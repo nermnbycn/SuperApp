@@ -1,0 +1,44 @@
+
+# React Native / Expo
+node_modules/
+.expo/
+.expo-shared/
+dist/
+web-build/
+*.tsbuildinfo
+
+# .NET Backend
+**/bin/
+**/obj/
+.vs/
+*.user
+*.suo
+
+# Gizli bilgiler
+.env
+.env.*
+!.env.example
+**/appsettings.Development.json
+**/appsettings.Local.json
+
+# Veritabanı
+*.db
+*.sqlite
+*.mdf
+*.ldf
+*.bak
+
+# Sertifikalar
+*.pfx
+*.pem
+*.key
+*.jks
+*.p12
+
+# Kullanıcı yüklemeleri
+**/wwwroot/uploads/
+
+# Geçici dosyalar
+*.log
+*.tmp
+.DS_Store
