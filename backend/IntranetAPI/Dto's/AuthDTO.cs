@@ -31,9 +31,6 @@ public class AuthDTO
     public string NewPassword { get; set; } = string.Empty;
 }
 
-
-
-
     public class AuthResponseDTO
     {
         public string Token { get; set; } = string.Empty;

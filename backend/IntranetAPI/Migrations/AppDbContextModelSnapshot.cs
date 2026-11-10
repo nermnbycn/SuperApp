@@ -30,11 +30,32 @@ namespace IntranetAPI.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly>("BirthDate")
-                        .HasColumnType("date");
+                    b.Property<string>("CollarType")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("ConcurrencyStamp")
                         .IsConcurrencyToken()
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateTime?>("CreateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("CreatedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("DateofBirth")
+                        .HasColumnType("date");
+
+                    b.Property<DateTime?>("DeleteTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("DeletedBy")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<int?>("DepartmentId")
+                        .HasColumnType("int");
+
+                    b.Property<string>("DomainName")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("Email")
@@ -44,15 +65,24 @@ namespace IntranetAPI.Migrations
                     b.Property<bool>("EmailConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<DateOnly>("EndDate")
+                        .HasColumnType("date");
+
                     b.Property<string>("FirstName")
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("HireDate")
-                        .HasColumnType("date");
-
                     b.Property<string>("ImageUrl")
                         .HasColumnType("nvarchar(max)");
+
+                    b.Property<bool>("IsDeleted")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsExceptional")
+                        .HasColumnType("bit");
+
+                    b.Property<bool>("IsManager")
+                        .HasColumnType("bit");
 
                     b.Property<string>("LastName")
                         .IsRequired()
@@ -63,6 +93,12 @@ namespace IntranetAPI.Migrations
 
                     b.Property<DateTimeOffset?>("LockoutEnd")
                         .HasColumnType("datetimeoffset");
+
+                    b.Property<string>("ManagerRegistryNo")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("NameSurname")
+                        .HasColumnType("nvarchar(max)");
 
                     b.Property<string>("NormalizedEmail")
                         .HasMaxLength(256)
@@ -75,21 +111,45 @@ namespace IntranetAPI.Migrations
                     b.Property<string>("PasswordHash")
                         .HasColumnType("nvarchar(max)");
 
+                    b.Property<string>("PersonalPhone")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("PhoneNumber")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("PhoneNumberConfirmed")
                         .HasColumnType("bit");
 
+                    b.Property<string>("RegistryNo")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("SecurityStamp")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<string>("ShortCode")
+                        .HasColumnType("nvarchar(max)");
+
+                    b.Property<DateOnly>("StartDate")
+                        .HasColumnType("date");
+
+                    b.Property<string>("Title")
                         .HasColumnType("nvarchar(max)");
 
                     b.Property<bool>("TwoFactorEnabled")
                         .HasColumnType("bit");
 
+                    b.Property<DateTime?>("UpdateTime")
+                        .HasColumnType("datetime2");
+
+                    b.Property<string>("UpdatedBy")
+                        .HasColumnType("nvarchar(max)");
+
                     b.Property<string>("UserName")
                         .HasMaxLength(256)
                         .HasColumnType("nvarchar(256)");
+
+                    b.Property<string>("WorkPhone")
+                        .HasColumnType("nvarchar(max)");
 
                     b.HasKey("Id");
 
@@ -233,7 +293,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("Blogs");
+                    b.ToTable("Blogs", (string)null);
                 });
 
             modelBuilder.Entity("IntranetAPI.Entities.BlogCategory", b =>
@@ -250,7 +310,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("BlogCategories");
+                    b.ToTable("BlogCategories", (string)null);
                 });
 
             modelBuilder.Entity("IntranetAPI.Entities.BlogFavorites", b =>
@@ -276,7 +336,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasIndex("UserId");
 
-                    b.ToTable("BlogFavorites");
+                    b.ToTable("BlogFavorites", (string)null);
                 });
 
             modelBuilder.Entity("IntranetAPI.Entities.CelebrationMessage", b =>
@@ -319,7 +379,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasIndex("SenderId");
 
-                    b.ToTable("CelebrationMessages");
+                    b.ToTable("CelebrationMessages", (string)null);
                 });
 
             modelBuilder.Entity("IntranetAPI.Entities.Company", b =>
@@ -395,7 +455,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("FoodMenus");
+                    b.ToTable("FoodMenus", (string)null);
                 });
 
             modelBuilder.Entity("IntranetAPI.Entities.GroupNew", b =>
@@ -441,7 +501,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("GroupNews");
+                    b.ToTable("GroupNews", (string)null);
                 });
 
             modelBuilder.Entity("IntranetAPI.Entities.GroupNewCompany", b =>
@@ -485,7 +545,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasIndex("GroupNewId");
 
-                    b.ToTable("GroupNewCompanies");
+                    b.ToTable("GroupNewCompanies", (string)null);
                 });
 
             modelBuilder.Entity("IntranetAPI.Entities.Tenant", b =>
@@ -508,7 +568,7 @@ namespace IntranetAPI.Migrations
 
                     b.HasKey("Id");
 
-                    b.ToTable("Tenants");
+                    b.ToTable("Tenants", (string)null);
                 });
 
             modelBuilder.Entity("Microsoft.AspNetCore.Identity.IdentityRole", b =>

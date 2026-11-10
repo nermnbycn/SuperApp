@@ -54,7 +54,7 @@ namespace IntranetAPI.Migrations
                     b.Property<int>("AccessFailedCount")
                         .HasColumnType("int");
 
-                    b.Property<DateOnly>("BirthDate")
+                    b.Property<DateOnly>("DateofBirth")
                         .HasColumnType("date");
 
                     b.Property<string>("ConcurrencyStamp")
@@ -72,7 +72,7 @@ namespace IntranetAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateOnly>("HireDate")
+                    b.Property<DateOnly>("StartDate")
                         .HasColumnType("date");
 
                     b.Property<string>("LastName")

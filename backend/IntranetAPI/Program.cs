@@ -6,13 +6,13 @@ using IntranetAPI.Data;
 using IntranetAPI.Entities;
 using IntranetAPI.Interfaces;
 using IntranetAPI.Services;
-using Microsoft.OpenApi;
+using IntranetAPI.Services.Interfaces;
 
+using Microsoft.OpenApi;
 using Microsoft.AspNetCore.Authentication.JwtBearer;
 using Microsoft.AspNetCore.Identity;
 using Microsoft.EntityFrameworkCore;
 using Microsoft.IdentityModel.Tokens;
-using IntranetAPI.Services.Interfaces;
 
 var builder = WebApplication.CreateBuilder(args);
 
@@ -22,19 +22,14 @@ var builder = WebApplication.CreateBuilder(args);
 
 builder.Services.AddControllers();
 builder.Services.AddOpenApi();
-
+builder.Services.AddEndpointsApiExplorer();
 
 // =====================================================
 // SWAGGER
 // =====================================================
 
-builder.Services.AddEndpointsApiExplorer();
-
-
-
 builder.Services.AddSwaggerGen(options =>
 {
-    // JWT Bearer tanımı
     options.AddSecurityDefinition("bearer", new OpenApiSecurityScheme
     {
         Type = SecuritySchemeType.Http,
@@ -43,15 +38,12 @@ builder.Services.AddSwaggerGen(options =>
         Description = "JWT tokenınızı giriniz."
     });
 
-    // Swagger isteklerine JWT eklenmesini sağlar
     options.AddSecurityRequirement(document =>
         new OpenApiSecurityRequirement
         {
             [new OpenApiSecuritySchemeReference("bearer", document)] = []
         });
 });
-
-
 
 // =====================================================
 // SQL SERVER
@@ -60,12 +52,9 @@ builder.Services.AddSwaggerGen(options =>
 builder.Services.AddDbContext<AppDbContext>(options =>
 {
     options.UseSqlServer(
-        builder.Configuration.GetConnectionString(
-            "DefaultConnection"
-        )
+        builder.Configuration.GetConnectionString("DefaultConnection")
     );
 });
-
 
 // =====================================================
 // ASP.NET CORE IDENTITY
@@ -74,10 +63,8 @@ builder.Services.AddDbContext<AppDbContext>(options =>
 builder.Services
     .AddIdentityCore<ApplicationUser>(options =>
     {
-        // Kullanıcılar e-posta ile giriş yapacak.
         options.User.RequireUniqueEmail = true;
 
-        // Şifre kuralları
         if (builder.Environment.IsDevelopment())
         {
             options.Password.RequireDigit = true;
@@ -87,7 +74,6 @@ builder.Services
             options.Password.RequiredLength = 7;
         }
 
-        // Yanlış giriş denemeleri
         options.Lockout.DefaultLockoutTimeSpan =
             TimeSpan.FromMinutes(15);
 
@@ -97,7 +83,6 @@ builder.Services
     })
     .AddEntityFrameworkStores<AppDbContext>()
     .AddSignInManager();
-
 
 // =====================================================
 // JWT AUTHENTICATION
@@ -120,7 +105,6 @@ var jwtAudience = jwtSettings["Audience"]
         "JWT Audience bulunamadı."
     );
 
-// Şu an appsettings.json içindeki düz metin anahtarla uyumlu.
 var jwtKeyBytes = Encoding.UTF8.GetBytes(jwtKey);
 
 if (jwtKeyBytes.Length < 32)
@@ -139,38 +123,51 @@ builder.Services
         options.TokenValidationParameters =
             new TokenValidationParameters
             {
-                // Tokenı oluşturan servis
                 ValidateIssuer = true,
                 ValidIssuer = jwtIssuer,
 
-                // Tokenın hedefi
                 ValidateAudience = true,
                 ValidAudience = jwtAudience,
 
-                // İmza doğrulaması
                 ValidateIssuerSigningKey = true,
 
                 IssuerSigningKey =
                     new SymmetricSecurityKey(jwtKeyBytes),
 
-                // Token süresi
                 ValidateLifetime = true,
 
                 ClockSkew = TimeSpan.FromSeconds(30),
 
-                // Identity kullanıcı ID claim'i
                 NameClaimType = ClaimTypes.NameIdentifier
             };
     });
 
-builder.Services.AddAuthorization();
+var adminUserIds = builder.Configuration
+    .GetSection("AdminAccess:UserIds")
+    .Get<string[]>() ?? [];
 
+builder.Services.AddAuthorization(options =>
+{
+    options.AddPolicy("AdminOnly", policy =>
+    {
+        policy.RequireAuthenticatedUser();
+
+        policy.RequireAssertion(context =>
+        {
+            var userId =
+                context.User.FindFirstValue(ClaimTypes.NameIdentifier)
+                ?? context.User.FindFirstValue("sub");
+
+            return !string.IsNullOrEmpty(userId)
+                && adminUserIds.Contains(userId);
+        });
+    });
+});
 
 // =====================================================
 // APPLICATION SERVICES
 // =====================================================
 
-// Mevcut servisler
 builder.Services.AddScoped<IMenuService, MenuService>();
 builder.Services.AddScoped<IUserService, UserService>();
 builder.Services.AddScoped<IBlogService, BlogService>();
@@ -179,22 +176,43 @@ builder.Services.AddScoped<IProfileService, ProfileService>();
 builder.Services.AddScoped<IGroupNewService, GroupNewService>();
 builder.Services.AddScoped<IAnnouncementService, AnnouncementService>();
 builder.Services.AddScoped<IMessageService, MessageService>();
+builder.Services.AddScoped<IAdminUserService, AdminUserService>();
 
-// Yeni giriş servisi
 builder.Services.AddScoped<IAuthService, AuthService>();
-
 
 // =====================================================
 // APP BUILD
 // =====================================================
+builder.Services.AddCors(options =>
+{
+    options.AddPolicy("AdminDashboard", policy =>
+    {
+        policy.WithOrigins("http://localhost:5173")
+              .AllowAnyHeader()
+              .AllowAnyMethod();
+    });
+});
+
 
 var app = builder.Build();
 
+// EF CORE MODEL KONTROLÜ
+
+
+using (var scope = app.Services.CreateScope())
+{
+    var context = scope.ServiceProvider
+        .GetRequiredService<AppDbContext>();
+
+    var connection = context.Database.GetDbConnection();
+
+    Console.WriteLine("SQL SERVER: " + connection.DataSource);
+    Console.WriteLine("VERİTABANI: " + connection.Database);
+}
 
 // =====================================================
 // TEST VERİLERİ
 // =====================================================
-
 
 if (app.Environment.IsDevelopment())
 {
@@ -202,15 +220,19 @@ if (app.Environment.IsDevelopment())
     {
         var services = scope.ServiceProvider;
 
+        var context = services
+            .GetRequiredService<AppDbContext>();
+
         var userManager = services
             .GetRequiredService<UserManager<ApplicationUser>>();
 
-        // Yeni Identity test kullanıcılarını oluştur.
+        // Identity test kullanıcılarını oluştur
         await IdentitySeeder.SeedAsync(userManager);
+
+        // Günlük yemek menülerini oluştur
+        await DbSeeder.SeedAsync(context);
     }
 }
-
-
 
 // =====================================================
 // DEVELOPMENT / SWAGGER
@@ -225,32 +247,27 @@ if (app.Environment.IsDevelopment())
     app.UseSwaggerUI();
 }
 
-
 // =====================================================
 // MIDDLEWARE
 // =====================================================
+
 app.UseHttpsRedirection();
 
 app.UseStaticFiles();
+app.UseCors("AdminDashboard");
 
 app.UseAuthentication();
 app.UseAuthorization();
 
 app.MapControllers();
 
-
 // =====================================================
-// CONTROLLERS
-// =====================================================
-
-app.MapControllers();
-
-
-// =====================================================
-// APPLICATION START
+// TEST ŞİFRELERİNİ SIFIRLAMA
 // =====================================================
 
-// YALNIZCA GELİŞTİRME ORTAMINDA TEST ŞİFRELERİNİ SIFIRLA
+// Yalnızca geliştirme ortamında ve
+// RESET_TEST_PASSWORDS=1 olduğunda çalışır.
+
 if (app.Environment.IsDevelopment() &&
     Environment.GetEnvironmentVariable("RESET_TEST_PASSWORDS") == "1")
 {
@@ -275,21 +292,29 @@ if (app.Environment.IsDevelopment() &&
             if (result.Succeeded)
             {
                 Console.WriteLine(
-                    $"Şifre güncellendi: {user.Email}");
+                    $"Şifre güncellendi: {user.Email}"
+                );
             }
             else
             {
                 Console.WriteLine(
                     $"HATA ({user.Email}): " +
                     string.Join(", ",
-                        result.Errors.Select(e => e.Description)));
+                        result.Errors.Select(e => e.Description))
+                );
             }
         }
     }
     catch (Exception ex)
     {
         Console.WriteLine(
-            "Test şifre sıfırlama hatası: " + ex.Message);
+            "Test şifre sıfırlama hatası: " + ex.Message
+        );
     }
 }
+
+// =====================================================
+// APPLICATION START
+// =====================================================
+
 app.Run();

@@ -48,15 +48,13 @@ public class MessageController : ControllerBase
             .Distinct()
             .ToList();
 
-        var senders = await _context
-            .Set<ApplicationUser>()
+        var senders = await _context.Users
             .AsNoTracking()
             .Where(x => senderIds.Contains(x.Id))
             .Select(x => new
             {
                 x.Id,
-                x.FirstName,
-                x.LastName,
+                x.NameSurname,
                 x.ImageUrl
             })
             .ToListAsync();
@@ -74,7 +72,7 @@ public class MessageController : ControllerBase
 
                 SenderName = sender == null
                     ? "Bilinmeyen Kullanıcı"
-                    : $"{sender.FirstName} {sender.LastName}",
+                    : sender.NameSurname,
 
                 SenderImageUrl = sender?.ImageUrl,
 

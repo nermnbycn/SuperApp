@@ -1,6 +1,5 @@
-using System;
+
 using IntranetAPI.Data;
-using IntranetAPI.Entities;
 using IntranetAPI.Interfaces;
 using Microsoft.EntityFrameworkCore;
 using static IntranetAPI.DTOs.CelebrationDTO;
@@ -9,7 +8,6 @@ namespace IntranetAPI.Services;
 
 public class UserService : IUserService
 {
-
     private readonly AppDbContext _context;
 
     public UserService(AppDbContext context)
@@ -17,47 +15,52 @@ public class UserService : IUserService
         _context = context;
     }
 
+    // BUGÜN DOĞUM GÜNÜ OLANLAR
     public async Task<List<BirthdayDTO>> GetTodayBirthdaysAsync()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
 
-        return await _context.Users  //Gün ve ay değerleri eşleşiyorsa o kişilerin listesini alalım
-            .AsNoTracking() //Değişiklik takibine alınmamasını sağlar
-            .Where(x => x.BirthDate.Day == today.Day &&
-                        x.BirthDate.Month == today.Month)
-                         .Select(x => new BirthdayDTO
-                         {
-                             Id = x.Id,
-                             FirstName = x.FirstName,
-                             LastName = x.LastName,
-                             BirthDate = x.BirthDate,
-                             ImageUrl = x.ImageUrl
-                         })
+        return await _context.Users
+            .AsNoTracking()
+            .Where(x =>
+                x.DateofBirth.Day == today.Day &&
+                x.DateofBirth.Month == today.Month)
+            .Select(x => new BirthdayDTO
+            {
+                Id = x.Id,
+                NameSurname = x.NameSurname,
+                DateofBirth = x.DateofBirth,
+                ImageUrl = x.ImageUrl
+            })
             .ToListAsync();
     }
 
+    // BUGÜN İŞ YIL DÖNÜMÜ OLANLAR
     public async Task<List<AnniversaryDTO>> GetTodayWorkAnniversariesAsync()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
 
         return await _context.Users
             .AsNoTracking()
-            .Where(x => x.HireDate.Day == today.Day &&
-                        x.HireDate.Month == today.Month &&
-                        x.HireDate.Year < today.Year)
-                         .Select(x => new AnniversaryDTO
-                         {
-                             Id = x.Id,
-                             FirstName = x.FirstName,
-                             LastName = x.LastName,
-                             HireDate = x.HireDate,
-                             ImageUrl = x.ImageUrl
-                         })
+            .Where(x =>
+                x.StartDate.Day == today.Day &&
+                x.StartDate.Month == today.Month &&
+                x.StartDate.Year < today.Year)
+            .Select(x => new AnniversaryDTO
+            {
+                Id = x.Id,
+                NameSurname = x.NameSurname,
+                StartDate = x.StartDate,
+                ImageUrl = x.ImageUrl
+            })
             .ToListAsync();
     }
+
+    // BU HAFTA DOĞUM GÜNÜ OLANLAR
     public async Task<List<WeeklyBirthdayDTO>> GetWeeklyBirthdaysAsync()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
+
         int daysFromMonday = ((int)today.DayOfWeek + 6) % 7;
         var sunday = today.AddDays(6 - daysFromMonday);
 
@@ -66,9 +69,8 @@ public class UserService : IUserService
             .Select(u => new
             {
                 u.Id,
-                u.FirstName,
-                u.LastName,
-                u.BirthDate,
+                u.NameSurname,
+                u.DateofBirth,
                 u.ImageUrl
             })
             .ToListAsync();
@@ -78,28 +80,28 @@ public class UserService : IUserService
             {
                 var nextBirthday = new DateOnly(
                     today.Year,
-                    u.BirthDate.Month,
+                    u.DateofBirth.Month,
                     Math.Min(
-                        u.BirthDate.Day,
+                        u.DateofBirth.Day,
                         DateTime.DaysInMonth(
                             today.Year,
-                            u.BirthDate.Month
+                            u.DateofBirth.Month
                         )
                     )
                 );
 
                 if (nextBirthday < today)
                 {
-                    int year = today.Year + 1;
+                    int nextYear = today.Year + 1;
 
                     nextBirthday = new DateOnly(
-                        year,
-                        u.BirthDate.Month,
+                        nextYear,
+                        u.DateofBirth.Month,
                         Math.Min(
-                            u.BirthDate.Day,
+                            u.DateofBirth.Day,
                             DateTime.DaysInMonth(
-                                year,
-                                u.BirthDate.Month
+                                nextYear,
+                                u.DateofBirth.Month
                             )
                         )
                     );
@@ -120,14 +122,15 @@ public class UserService : IUserService
             .Select(x => new WeeklyBirthdayDTO
             {
                 Id = x.User.Id,
-                FirstName = x.User.FirstName,
-                LastName = x.User.LastName,
-                BirthDate = x.User.BirthDate,
+                NameSurname = x.User.NameSurname,
+                DateofBirth = x.User.DateofBirth,
                 ImageUrl = x.User.ImageUrl,
                 DaysUntilBirthday = x.Days
             })
             .ToList();
     }
+
+    // BU HAFTA İŞ YIL DÖNÜMÜ OLANLAR
     public async Task<List<WeeklyAnniversaryDTO>> GetWeeklyAnniversariesAsync()
     {
         var today = DateOnly.FromDateTime(DateTime.Today);
@@ -137,13 +140,12 @@ public class UserService : IUserService
 
         var users = await _context.Users
             .AsNoTracking()
-            .Where(u => u.HireDate.Year < today.Year)
+            .Where(u => u.StartDate.Year < today.Year)
             .Select(u => new
             {
                 u.Id,
-                u.FirstName,
-                u.LastName,
-                u.HireDate,
+                u.NameSurname,
+                u.StartDate,
                 u.ImageUrl
             })
             .ToListAsync();
@@ -152,13 +154,16 @@ public class UserService : IUserService
             .Select(u =>
             {
                 int day = Math.Min(
-                    u.HireDate.Day,
-                    DateTime.DaysInMonth(today.Year, u.HireDate.Month)
+                    u.StartDate.Day,
+                    DateTime.DaysInMonth(
+                        today.Year,
+                        u.StartDate.Month
+                    )
                 );
 
                 var anniversary = new DateOnly(
                     today.Year,
-                    u.HireDate.Month,
+                    u.StartDate.Month,
                     day
                 );
 
@@ -168,10 +173,13 @@ public class UserService : IUserService
 
                     anniversary = new DateOnly(
                         nextYear,
-                        u.HireDate.Month,
+                        u.StartDate.Month,
                         Math.Min(
-                            u.HireDate.Day,
-                            DateTime.DaysInMonth(nextYear, u.HireDate.Month)
+                            u.StartDate.Day,
+                            DateTime.DaysInMonth(
+                                nextYear,
+                                u.StartDate.Month
+                            )
                         )
                     );
                 }
@@ -191,18 +199,11 @@ public class UserService : IUserService
             .Select(x => new WeeklyAnniversaryDTO
             {
                 Id = x.User.Id,
-                FirstName = x.User.FirstName,
-                LastName = x.User.LastName,
-                HireDate = x.User.HireDate,
+                NameSurname = x.User.NameSurname,
+                StartDate = x.User.StartDate,
                 ImageUrl = x.User.ImageUrl,
                 DaysUntilAnniversary = x.Days
             })
             .ToList();
     }
-
-
-
-
-
-
 }

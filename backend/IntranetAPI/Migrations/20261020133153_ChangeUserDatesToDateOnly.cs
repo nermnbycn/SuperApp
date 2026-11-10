@@ -12,7 +12,7 @@ namespace IntranetAPI.Migrations
         protected override void Up(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<DateOnly>(
-                name: "HireDate",
+                name: "StartDate",
                 table: "Users",
                 type: "date",
                 nullable: false,
@@ -20,7 +20,7 @@ namespace IntranetAPI.Migrations
                 oldType: "datetime2");
 
             migrationBuilder.AlterColumn<DateOnly>(
-                name: "BirthDate",
+                name: "DateofBirth",
                 table: "Users",
                 type: "date",
                 nullable: false,
@@ -32,7 +32,7 @@ namespace IntranetAPI.Migrations
         protected override void Down(MigrationBuilder migrationBuilder)
         {
             migrationBuilder.AlterColumn<DateTime>(
-                name: "HireDate",
+                name: "StartDate",
                 table: "Users",
                 type: "datetime2",
                 nullable: false,
@@ -40,7 +40,7 @@ namespace IntranetAPI.Migrations
                 oldType: "date");
 
             migrationBuilder.AlterColumn<DateTime>(
-                name: "BirthDate",
+                name: "DateofBirth",
                 table: "Users",
                 type: "datetime2",
                 nullable: false,

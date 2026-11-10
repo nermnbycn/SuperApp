@@ -160,7 +160,7 @@ namespace IntranetAPI.Migrations
 
                     SqlServerPropertyBuilderExtensions.UseIdentityColumn(b.Property<int>("Id"));
 
-                    b.Property<DateTime>("BirthDate")
+                    b.Property<DateTime>("DateofBirth")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("Email")
@@ -171,7 +171,7 @@ namespace IntranetAPI.Migrations
                         .IsRequired()
                         .HasColumnType("nvarchar(max)");
 
-                    b.Property<DateTime>("HireDate")
+                    b.Property<DateTime>("StartDate")
                         .HasColumnType("datetime2");
 
                     b.Property<string>("LastName")

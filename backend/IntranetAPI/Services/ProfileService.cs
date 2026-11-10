@@ -1,4 +1,4 @@
-using System;
+
 using IntranetAPI.Data;
 using IntranetAPI.Dto_s;
 using IntranetAPI.Interfaces;
@@ -28,16 +28,14 @@ public class ProfileService : IProfileService
             .Where(x => x.Id == userId)
             .Select(x => new ProfileDTO
             {
-                id = userId,
-                FirstName = x.FirstName,
-                LastName = x.LastName,
-                BirthDate = x.BirthDate,
+                id = x.Id,
+                NameSurname = x.NameSurname,
+                DateofBirth = x.DateofBirth,
                 ImageUrl = x.ImageUrl,
-                HireDate = x.HireDate,
+                StartDate = x.StartDate,
                 Email = x.Email,
-                PhoneNumber = x.PhoneNumber,
+                PhoneNumber = x.PhoneNumber
             })
             .FirstOrDefaultAsync();
     }
-
 }
